@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id
+  username  String?
+  firstName String?
+  subs      Subscription[]
+  payments  Payment[]
+}
+
+model Channel {
+  id        String   @id
+  title     String
+  adminId   String
+  plans     Plan[]
+  subs      Subscription[]
+}
+
+model Plan {
+  id          Int      @id @default(autoincrement())
+  channelId   String
+  channel     Channel  @relation(fields: [channelId], references: [id])
+  name        String
+  description String?
+  price       Int
+  priceType   String   @default("UZS")
+  duration    Int
+  payments    Payment[]
+}
+
+model Subscription {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  channelId   String
+  channel     Channel  @relation(fields: [channelId], references: [id])
+  status      String   @default("ACTIVE")
+  expiresAt   DateTime
+}
+
+model Settings {
+  id               Int     @id @default(1)
+  cardNumber       String?
+  paymentChannelId String?
+  rubRate          Float   @default(155)
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  planId      Int
+  plan        Plan     @relation(fields: [planId], references: [id])
+  amount      Int
+  rubAmount   Float?
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  promoCode   String?
+}
+
+model PromoCode {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique
+  discountType  String   @default("percent")
+  discountValue Int
+  maxUses       Int      @default(0)
+  usedCount     Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
